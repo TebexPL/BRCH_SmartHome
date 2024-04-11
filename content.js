@@ -4,14 +4,32 @@
 import {isLoggedIn} from './middleware.js'
 import {client} from './index.js'
 import {hasSpecialChars} from './auth.js'
+import bodyParser from 'body-parser';
 
+const convertSensors = (nums) => {
+  let separated_str = [];
+  let good_sensors =[];
+  if (nums.length === 0) {
+    return [0,0,0,0,0];
+  }
+  separated_str = nums.match(/\d{1,4}/g);
+  for (let i = 0; i < separated_str.length; i++) {
+    good_sensors.push(parseInt(separated_str[i])/10);    
+  }
+  good_sensors[4] = good_sensors[4]/10;
+  return good_sensors;
+}
 
+const convertLeds = (nums) => {
+
+}
 
 export const content = (app) => {
-
-
+  let sensors = 0;
+  let prettySensors = [];
 
   app.get('/api/content/leds', async (req, res, next) => {
+    
     try{
       const dbResponse = await client.query(`
 
@@ -23,8 +41,6 @@ export const content = (app) => {
         blue
       FROM rooms
       `);
-
-
 
       console.log(dbResponse.rows);
       //Tutaj masz w dbResponse.rows otrzymane dane.
@@ -116,32 +132,37 @@ export const content = (app) => {
 
 
   app.post('/api/content/sensors', async (req, res, next) => {
+    sensors = req.body.sensors;
+    prettySensors = convertSensors(sensors);
+
     try{
-      let rooms = [{name: 'Kuchnia', temp:0},
-                    {name: 'Salon', temp:0},
-                    {name: 'Łazienka',temp:0},
-                    {name: 'Pokój', temp:0}]
+      let rooms = [{name: 'Kuchnia', temp:prettySensors[0]},
+                    {name: 'Salon', temp:prettySensors[1]},
+                    {name: 'Łazienka',temp:prettySensors[2]},
+                    {name: 'Pokój', temp:prettySensors[3]}]
 
 
-      let solar = {timestamp: (new Date(Date.now())).toUTCString(), value: 0};
+      let solar = {timestamp: (new Date(Date.now())).toUTCString(), value: prettySensors[4]};
 
 
-    for(let room of rooms){
-      const dbResponse = await client.query(`
-
-        UPDATE
-        SET
-        temperature=$1
-        WHERE
-        name=$2
-      `,[room.temp, room.name]);
-
-    }
+      for(let room of rooms){
+        
         const dbResponse = await client.query(`
 
-        INSERT INTO
-          solar(timestamp, value)
-        VALUES($1, $2)
+          UPDATE
+          rooms
+          SET
+          temperature=$1
+          WHERE
+          name=$2
+        `,[room.temp, room.name]);
+
+      }
+      const dbResponse = await client.query(`
+
+      INSERT INTO
+      solar(timestamp, value)
+      VALUES($1, $2)
       `,[solar.timestamp, solar.value]);
 
       res.status(200).send();
