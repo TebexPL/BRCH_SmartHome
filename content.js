@@ -6,7 +6,6 @@ import {client} from './index.js'
 import {hasSpecialChars} from './auth.js'
 
 
-//TODO CONTENT CONTROL
 
 export const content = (app) => {
 
@@ -25,9 +24,12 @@ export const content = (app) => {
       FROM rooms
       `);
 
+
+
       console.log(dbResponse.rows);
-
-
+      //Tutaj masz w dbResponse.rows otrzymane dane. 
+      //powinnaś Tam mieć coś w rodzaju tablicy obiektów z nazwą pokoju i kolorami itp
+      //Trzeba to przekonwertować na tekst żeby ESP mogło zrozumieć 
       res.status(200).send(dbResponse.rows);
 
     }
@@ -40,53 +42,70 @@ export const content = (app) => {
   app.post('/api/content/leds', async (req, res, next) => {
     try{
 
+      //Tutaj dostajesz z frontu jakie mają być światła, trzeba ustawić wartości liczbowe żeby wpisało do bazy danych
+
+      let rooms = [{name: 'Kuchnia', r: 255, g:0, b:0, br:255},
+                    {name: 'Salon', r:0, g:255, b:0, br:255},
+                    {name: 'Łazienka', r:0, g:0, b:255, br:255},
+                    {name: 'Pokój', r:0, g:255, b:0, br:255}]
 
 
-      let rooms = [{name: 'Kuchnia', r: 0, g:0, b:0, br:0},
-                     {name: 'Salon', r:0, g:0, b:0, br:0},
-                      {name: 'Łazienka', r:0, g:0, b:0, br:0},
-                      {name: 'Pokój', r:0, g:0, b:0, br:0}]
+      for(let room of rooms){
+        const dbResponse = await client.query(`
 
+        UPDATE
+          SET
+          brightness = $1,
+          red = $2,
+          green = $3,
+          blue = $4
+        WHERE
+        name=$5
+        `,[room.br, room.r, room.g, room.b, room.name]);
 
-    for(let room of rooms){
-      const dbResponse = await client.query(`
+      }
 
-      UPDATE
-        SET
-        brightness = $1,
-        red = $2,
-        green = $3,
-        blue = $4
-      WHERE
-      name=$5
-      `,[room.br, room.r, room.g, room.b, rom.name]);
-
-    }
-
-      res.status(200).send(dbResponse.rows);
+      req.status(200).send();
 
     }
     catch(ex){
       console.log(ex);
-      res.status(404).send();
+      req.status(404).send();
     }
   });
 
 
-  app.get('/api/content/temperature', async (req, res, next) => {
+  app.get('/api/content/sensors', async (req, res, next) => {
     try{
-      const dbResponse = await client.query(`
+      const dbResponseRooms = await client.query(`
 
-      SELECT
+        SELECT
         name,
         temperature
-      FROM rooms
+        FROM rooms
       `);
 
-      console.log(dbResponse.rows);
+      console.log(dbResponseRooms.rows);
 
 
-      res.status(200).send(dbResponse.rows);
+      const dbResponseSolar = await client.query(`
+
+
+        SELECT
+          timestamp,
+          value
+        FROM
+          solar
+
+      `)
+      console.log(dbResponseSolar.rows);
+
+
+      //W dbResponseRooms powinnaś mieć coś w rodzaju 4 obiektów z nazwami pokoi i wartościami
+      //W dbResponseSolar powinnaś mieć tablicę timestampów i wartości o tej godzine   
+      //Do output trzeba coś skompletować z tych danych
+      const output = {};
+      res.status(200).send(output);
 
     }
     catch(ex){
@@ -96,29 +115,36 @@ export const content = (app) => {
   });
 
 
-  app.post('/api/content/temperature', async (req, res, next) => {
+  app.post('/api/content/sensors', async (req, res, next) => {
     try{
       let rooms = [{name: 'Kuchnia', temp:0},
-                     {name: 'Salon', temp:0},
-                      {name: 'Łazienka',temp:0},
-                      {name: 'Pokój', temp:0}]
+                    {name: 'Salon', temp:0},
+                    {name: 'Łazienka',temp:0},
+                    {name: 'Pokój', temp:0}]
+
+
+      let solar = {timestamp: (new Date(Date.now())).toUTCString(), value: 0}; 
 
 
     for(let room of rooms){
       const dbResponse = await client.query(`
 
-      UPDATE
+        UPDATE
         SET
         temperature=$1
-      WHERE
-      name=$2
+        WHERE
+        name=$2
       `,[room.temperature, room.name]);
 
     }
+        const dbResponse = await client.query(`
 
+        INSERT INTO
+          solar(timestamp, value)
+        VALUES($1, $2)
+      `,[solar.timestamp, solar.value]);
 
-
-      res.status(200).send(dbResponse.rows);
+      res.status(200).send();
 
     }
     catch(ex){
