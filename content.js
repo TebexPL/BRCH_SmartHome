@@ -27,9 +27,9 @@ export const content = (app) => {
 
 
       console.log(dbResponse.rows);
-      //Tutaj masz w dbResponse.rows otrzymane dane. 
+      //Tutaj masz w dbResponse.rows otrzymane dane.
       //powinnaś Tam mieć coś w rodzaju tablicy obiektów z nazwą pokoju i kolorami itp
-      //Trzeba to przekonwertować na tekst żeby ESP mogło zrozumieć 
+      //Trzeba to przekonwertować na tekst żeby ESP mogło zrozumieć
       res.status(200).send(dbResponse.rows);
 
     }
@@ -102,7 +102,7 @@ export const content = (app) => {
 
 
       //W dbResponseRooms powinnaś mieć coś w rodzaju 4 obiektów z nazwami pokoi i wartościami
-      //W dbResponseSolar powinnaś mieć tablicę timestampów i wartości o tej godzine   
+      //W dbResponseSolar powinnaś mieć tablicę timestampów i wartości o tej godzine
       //Do output trzeba coś skompletować z tych danych
       const output = {};
       res.status(200).send(output);
@@ -123,7 +123,7 @@ export const content = (app) => {
                     {name: 'Pokój', temp:0}]
 
 
-      let solar = {timestamp: (new Date(Date.now())).toUTCString(), value: 0}; 
+      let solar = {timestamp: (new Date(Date.now())).toUTCString(), value: 0};
 
 
     for(let room of rooms){
@@ -134,7 +134,7 @@ export const content = (app) => {
         temperature=$1
         WHERE
         name=$2
-      `,[room.temperature, room.name]);
+      `,[room.temp, room.name]);
 
     }
         const dbResponse = await client.query(`
