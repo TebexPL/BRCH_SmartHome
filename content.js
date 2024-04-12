@@ -14,7 +14,7 @@ const convertSensors = (nums) => {
   }
   separated_str = nums.match(/\d{1,4}/g);
   for (let i = 0; i < separated_str.length; i++) {
-    good_sensors.push(parseInt(separated_str[i])/10);    
+    good_sensors.push(parseInt(separated_str[i])/10);
   }
   good_sensors[4] = good_sensors[4]/10;
   return good_sensors;
@@ -31,7 +31,7 @@ export const content = (app) => {
   let leds_in_room = [];
 
   app.get('/api/content/leds', async (req, res, next) => {
-    
+
     try{
       const dbResponse = await client.query(`
 
@@ -45,24 +45,23 @@ export const content = (app) => {
       `);
 
       //console.log(dbResponse.rows);
-      
+
       for (let i = 0; i < dbResponse.rows.length; i++) {
         leds_in_room.push(dbResponse.rows[i].red, dbResponse.rows[i].green, dbResponse.rows[i].blue, dbResponse.rows[i].brightness);
         leds_to_esp.push(leds_in_room);
         leds_in_room = [];
       }
-      
+      res.body = "";
       for (let i = 0; i < leds_to_esp.length; i++) {
         for (let j = 0; j < leds_to_esp[i].length; j++) {
           res.body += String(leds_to_esp[i][j]).padStart(3, '0');
-          
-        } 
+
+        }
       }
-      //console.log(res.body.length);
-      
+        leds_to_esp = []
+
+
       res.status(200).send(res.body);
-      res.body = "";
-      leds_to_esp = [];
     }
     catch(ex){
       console.log(ex);
@@ -72,8 +71,7 @@ export const content = (app) => {
 
   app.post('/api/content/leds', async (req, res, next) => {
     try{
-
-      //Tutaj dostajesz z frontu jakie mają być światła, trzeba ustawić wartości liczbowe żeby wpisało do bazy danych
+      req.body.
 
       let rooms = [{name: 'Kuchnia', r: 255, g:0, b:0, br:255},
                     {name: 'Salon', r:0, g:255, b:0, br:255},
@@ -116,7 +114,6 @@ export const content = (app) => {
         FROM rooms
       `);
 
-      console.log(dbResponseRooms.rows);
 
 
       const dbResponseSolar = await client.query(`
@@ -127,15 +124,17 @@ export const content = (app) => {
           value
         FROM
           solar
+       ORDER BY timestamp DESC
+       LIMIT 1
+
 
       `)
-      console.log(dbResponseSolar.rows);
 
 
       //W dbResponseRooms powinnaś mieć coś w rodzaju 4 obiektów z nazwami pokoi i wartościami
       //W dbResponseSolar powinnaś mieć tablicę timestampów i wartości o tej godzine
       //Do output trzeba coś skompletować z tych danych
-      const output = {};
+      const output = {temps: dbResponseRooms.rows, solar: dbResponseSolar.rows[0]};
       res.status(200).send(output);
 
     }
@@ -161,7 +160,7 @@ export const content = (app) => {
 
 
       for(let room of rooms){
-        
+
         const dbResponse = await client.query(`
 
           UPDATE
