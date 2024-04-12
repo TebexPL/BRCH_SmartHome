@@ -20,16 +20,18 @@ const convertSensors = (nums) => {
   return good_sensors;
 }
 
-const convertLeds = (nums) => {
-
-}
-
 export const content = (app) => {
   let sensors = 0;
   let prettySensors = [];
+  let leds = [{name: 'Kuchnia', r: 255, g:0, b:0, br:255},
+              {name: 'Salon', r:0, g:255, b:0, br:255},
+              {name: 'Łazienka', r:0, g:0, b:255, br:255},
+              {name: 'Pokój', r:0, g:255, b:0, br:255}]
+  let leds_to_esp = [];
+  let leds_in_room = [];
 
   app.get('/api/content/leds', async (req, res, next) => {
-    
+
     try{
       const dbResponse = await client.query(`
 
@@ -42,11 +44,23 @@ export const content = (app) => {
       FROM rooms
       `);
 
-      console.log(dbResponse.rows);
-      //Tutaj masz w dbResponse.rows otrzymane dane.
-      //powinnaś Tam mieć coś w rodzaju tablicy obiektów z nazwą pokoju i kolorami itp
-      //Trzeba to przekonwertować na tekst żeby ESP mogło zrozumieć
-      res.status(200).send(dbResponse.rows);
+      //console.log(dbResponse.rows);
+      
+      for (let i = 0; i < dbResponse.rows.length; i++) {
+        leds_in_room.push(dbResponse.rows[i].red, dbResponse.rows[i].green, dbResponse.rows[i].blue, dbResponse.rows[i].brightness);
+        leds_to_esp.push(leds_in_room);
+        leds_in_room = [];
+      }
+      res.body = "";
+      for (let i = 0; i < leds_to_esp.length; i++) {
+        for (let j = 0; j < leds_to_esp[i].length; j++) {
+          res.body += String(leds_to_esp[i][j]).padStart(3, '0');
+          
+        } 
+      }
+      //console.log(res.body.length);
+      
+      res.status(200).send(res.body);
 
     }
     catch(ex){
