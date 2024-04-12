@@ -31,7 +31,7 @@ export const content = (app) => {
   let leds_in_room = [];
 
   app.get('/api/content/leds', async (req, res, next) => {
-
+    
     try{
       const dbResponse = await client.query(`
 
@@ -51,7 +51,7 @@ export const content = (app) => {
         leds_to_esp.push(leds_in_room);
         leds_in_room = [];
       }
-      res.body = "";
+      
       for (let i = 0; i < leds_to_esp.length; i++) {
         for (let j = 0; j < leds_to_esp[i].length; j++) {
           res.body += String(leds_to_esp[i][j]).padStart(3, '0');
@@ -61,7 +61,8 @@ export const content = (app) => {
       //console.log(res.body.length);
       
       res.status(200).send(res.body);
-
+      res.body = "";
+      leds_to_esp = [];
     }
     catch(ex){
       console.log(ex);
