@@ -42,6 +42,9 @@ export const content = (app) => {
         green,
         blue
       FROM rooms
+      ORDER BY name DESC
+
+
       `);
 
       //console.log(dbResponse.rows);
@@ -71,7 +74,6 @@ export const content = (app) => {
 
   app.post('/api/content/leds', async (req, res, next) => {
     try{
-      console.log(req.body);
       if(req.body[0] == null)
         return;
 
