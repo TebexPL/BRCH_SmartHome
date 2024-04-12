@@ -71,18 +71,20 @@ export const content = (app) => {
 
   app.post('/api/content/leds', async (req, res, next) => {
     try{
-      req.body.
+      console.log(req.body);
+      if(req.body[0] == null)
+        return;
 
-      let rooms = [{name: 'Kuchnia', r: 255, g:0, b:0, br:255},
-                    {name: 'Salon', r:0, g:255, b:0, br:255},
-                    {name: 'Łazienka', r:0, g:0, b:255, br:255},
-                    {name: 'Pokój', r:0, g:255, b:0, br:255}]
+      let rooms = [{name: 'Kuchnia', r: req.body[0].r, g:req.body[0].g, b:req.body[0].b, br:Math.floor(req.body[0].a*255)},
+                    {name: 'Salon', r:req.body[1].r, g:req.body[1].g, b:req.body[1].b, br:Math.floor(req.body[1].a*255)},
+                    {name: 'Łazienka', r:req.body[2].r, g:req.body[2].g, b:req.body[2].b, br:Math.floor(req.body[2].a*255)},
+                    {name: 'Pokój', r:req.body[3].r, g:req.body[3].g, b:req.body[3].b, br:Math.floor(req.body[3].a*255)}]
 
 
       for(let room of rooms){
         const dbResponse = await client.query(`
 
-        UPDATE
+        UPDATE rooms
           SET
           brightness = $1,
           red = $2,
